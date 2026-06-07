@@ -13,4 +13,7 @@ def create_app():
     from app.api.websockets import register_events
     register_events(socketio)
     
+    from app.api.video import video_bp
+    app.register_blueprint(video_bp, url_prefix='/api')
+    
     return app

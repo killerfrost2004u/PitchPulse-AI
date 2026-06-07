@@ -30,50 +30,65 @@ class VisionPipeline:
                 break
             
             frame_id += 1
-            # Run YOLOv8 tracking, persist=True uses ByteTrack under the hood to keep IDs consistent
-            results = self.model.track(frame, persist=True, verbose=False)
+            # Run YOLOv8 tracking with tuned parameters for tiny sports players
+            # imgsz=1280 forces high-res analysis, conf=0.15 catches distant players
+            # tracker="botsort.yaml" or "bytetrack.yaml" reduces ID flashing
+            results = self.model.track(
+                frame, 
+                persist=True, 
+                verbose=False,
+                imgsz=1280,
+                conf=0.15,
+                iou=0.45,
+                tracker="bytetrack.yaml"
+            )
             
             entities = []
             
             if results and results[0].boxes:
                 boxes = results[0].boxes
                 
-                # YOLO returns xyxy (top-left, bottom-right)
                 for box in boxes:
-                    # COCO dataset classes: 0=person, 32=sports ball
                     cls_id = int(box.cls[0].item())
-                    
                     if cls_id not in [0, 32]:
                         continue
                     
                     label = "ball" if cls_id == 32 else "player"
                     
-                    # Ensure the tracking algorithm assigned an ID
                     if box.id is None:
                         continue
                     track_id = int(box.id[0].item())
                     
-                    # Calculate bottom-center for players (feet on ground mapping) 
-                    # or center for ball
                     x1, y1, x2, y2 = box.xyxy[0].tolist()
                     u = (x1 + x2) / 2.0
                     v = y2 if label == "player" else (y1 + y2) / 2.0
                     
-                    # Apply homography transform to move from pixel space to 2D pitch space
                     x, y = mapper.transform(u, v)
                     
                     entities.append(Entity(
                         id=track_id,
                         label=label,
-                        team=None, # TBD: Add team clustering logic based on shirt color
+                        team=None,
                         position=(x, y),
                         speed=0.0
                     ))
+
+                    # Draw bounding box and ID on the OpenCV frame
+                    color = (0, 255, 255) if label == "player" else (255, 255, 255)
+                    cv2.rectangle(frame, (int(x1), int(y1)), (int(x2), int(y2)), color, 2)
+                    cv2.putText(frame, f"{label} {track_id}", (int(x1), int(y1)-10), 
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
                     
-            yield FrameData(
+            frame_data = FrameData(
                 frame_id=frame_id,
                 timestamp=time.time(),
                 entities=entities
             )
+
+            # Encode the annotated frame to JPEG
+            ret, buffer = cv2.imencode('.jpg', frame)
+            jpeg_bytes = buffer.tobytes() if ret else None
+            
+            yield frame_data, jpeg_bytes
             
         cap.release()

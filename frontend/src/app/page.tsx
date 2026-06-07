@@ -32,9 +32,29 @@ export default function Home() {
         {/* Dashboard Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          {/* Main Radar View */}
-          <section className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative flex flex-col min-h-[500px]">
-            <h2 className="text-lg font-semibold text-neutral-200 mb-4 flex items-center gap-2">
+          {/* Main Visuals View */}
+          <section className="lg:col-span-2 flex flex-col gap-6">
+            
+            {/* Live Camera Feed */}
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative flex flex-col">
+              <h2 className="text-lg font-semibold text-neutral-200 mb-4 flex items-center gap-2">
+                <span className="text-blue-400">📷</span> Live Camera Feed
+              </h2>
+              <div className="flex-1 rounded-xl bg-neutral-950 border border-neutral-800/50 overflow-hidden flex items-center justify-center min-h-[300px]">
+                 <img 
+                    src="http://localhost:5000/api/video_feed" 
+                    alt="Live YOLOv8 Feed" 
+                    className="w-full h-auto object-contain"
+                    onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                    }}
+                 />
+              </div>
+            </div>
+
+            {/* 2D Pitch Radar */}
+            <div className="bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative flex flex-col min-h-[500px]">
+              <h2 className="text-lg font-semibold text-neutral-200 mb-4 flex items-center gap-2">
               <span className="text-emerald-400">●</span> 2D Pitch Radar
             </h2>
             <div className="flex-1 rounded-xl flex flex-col items-center justify-center relative">
@@ -47,6 +67,7 @@ export default function Home() {
                         <p className="z-10 text-neutral-500">Waiting for Edge Vision pipeline data...</p>
                     </div>
                 )}
+            </div>
             </div>
           </section>
 
