@@ -1,21 +1,24 @@
 import time
 from flask_socketio import SocketIO
-from app.schemas.tracking import FrameData, Entity
+from app.vision.tracker import VisionPipeline
 
-def emit_mock_tracking_data(socketio: SocketIO):
-    frame_id = 0
-    while True:
-        socketio.sleep(1.0) # Emit 1 FPS mock data
-        frame_id += 1
+def emit_real_tracking_data(socketio: SocketIO):
+    video_path = r"D:\Downloads\Test.mp4"
+    pipeline = VisionPipeline("yolov8n.pt")
+    
+    # Process the video frame-by-frame as a generator
+    for frame_data in pipeline.process_video(video_path):
+        socketio.emit('tracking_update', frame_data.model_dump())
         
-        entity = Entity(id=1, label='player', team='team_a', position=(10.0 + (frame_id % 10), 20.0), speed=2.5)
-        frame = FrameData(frame_id=frame_id, timestamp=time.time(), entities=[entity])
+        # Sleep to yield control back to eventlet loop and cap emissions to 30 FPS
+        # This prevents the CV loop from choking the WebSocket server
+        socketio.sleep(1/30.0) 
         
-        socketio.emit('tracking_update', frame.model_dump())
+    print("Video processing finished.")
 
 def register_events(socketio: SocketIO):
-    # Start the background task
-    socketio.start_background_task(emit_mock_tracking_data, socketio)
+    # Start the real vision background task
+    socketio.start_background_task(emit_real_tracking_data, socketio)
 
     @socketio.on('connect')
     def handle_connect():
