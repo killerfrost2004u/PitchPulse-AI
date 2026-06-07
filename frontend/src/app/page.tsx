@@ -1,6 +1,7 @@
 "use client";
 
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { PitchRadar } from '@/components/PitchRadar';
 
 export default function Home() {
   const { isConnected, latestFrame, tacticalEvents } = useWebSocket();
@@ -32,23 +33,18 @@ export default function Home() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Main Radar View */}
-          <section className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden flex flex-col min-h-[500px]">
+          <section className="lg:col-span-2 bg-neutral-900 border border-neutral-800 rounded-2xl p-6 shadow-2xl relative flex flex-col min-h-[500px]">
             <h2 className="text-lg font-semibold text-neutral-200 mb-4 flex items-center gap-2">
               <span className="text-emerald-400">●</span> 2D Pitch Radar
             </h2>
-            <div className="flex-1 bg-neutral-950 rounded-xl border border-neutral-800/50 flex flex-col items-center justify-center relative overflow-hidden">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+            <div className="flex-1 rounded-xl flex flex-col items-center justify-center relative">
                 {latestFrame ? (
-                    <div className="z-10 bg-neutral-900/80 backdrop-blur border border-neutral-800 p-6 rounded-xl max-w-md w-full font-mono text-sm shadow-xl">
-                        <div className="text-emerald-400 mb-2">Raw Frame Data Received:</div>
-                        <pre className="text-neutral-300 overflow-x-auto">
-                            {JSON.stringify(latestFrame, null, 2)}
-                        </pre>
-                    </div>
+                    <PitchRadar frame={latestFrame} />
                 ) : (
-                    <div className="z-10 flex flex-col items-center text-neutral-500">
-                        <div className="w-8 h-8 border-4 border-neutral-700 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
-                        <p>Waiting for Edge Vision pipeline data...</p>
+                    <div className="flex flex-col items-center justify-center w-full h-full bg-neutral-950 rounded-xl border border-neutral-800/50 relative overflow-hidden">
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+                        <div className="z-10 w-8 h-8 border-4 border-neutral-700 border-t-emerald-500 rounded-full animate-spin mb-4"></div>
+                        <p className="z-10 text-neutral-500">Waiting for Edge Vision pipeline data...</p>
                     </div>
                 )}
             </div>
